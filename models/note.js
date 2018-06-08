@@ -9,7 +9,8 @@ const noteSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  content: String
+  content: String,
+  folderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Folder' },
 },{timestamps: true});
 
 noteSchema.set('toObject', {
@@ -20,4 +21,4 @@ noteSchema.set('toObject', {
   }
 });
 
-module.exports = mongoose.model('Note', noteSchema, 'Notes');
+module.exports = mongoose.model('Note', noteSchema, 'notes');

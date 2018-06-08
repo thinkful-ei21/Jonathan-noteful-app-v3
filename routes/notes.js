@@ -1,119 +1,113 @@
 'use strict';
 
 const express = require('express');
-const mongoose = require('mongoose');
-const { MONGODB_URI } = require('../config');
 const Note = require('../models/note');
 const router = express.Router();
+const mongoose = require('mongoose');
+
 
 /* ========== GET/READ ALL ITEM ========== */
 router.get('/', (req, res, next) => {
   const { searchTerm, folderId, tags } = req.query;
 
+  let filter = {};
 
-  mongoose.connect(MONGODB_URI)
-    .then(() => {
-      let filter = {};
-
-      if (searchTerm) {
-        filter = {$or: [{title: { $regex: searchTerm }}, {content: { $regex: searchTerm }}]};
-      }
-      return Note
-        .find(filter)
-        .sort({ updatedAt: 'desc' });
-    })    
+  if (searchTerm) {
+    filter = {$or: [{title: { $regex: searchTerm }}, {content: { $regex: searchTerm }}]};
+  }
+  return Note
+    .find(filter)
+    .sort({ updatedAt: 'desc' })
+        
     .then(results => {
       if(results) {
         res.json(results);
       }else {
         next();
       }
-    })
-    .then(() => {
-      return mongoose.disconnect();
     })
     .catch(err => next(err)); 
 });
 
-
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/:id', (req, res, next) => {
-  const id = req.params.id;
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
+    return next(err);
+  }
   
-  mongoose.connect(MONGODB_URI)
-    .then(() => {
-      return Note
-        .findById(id);
-    })   
+  Note.findById(id)   
     .then(results => {
       if(results) {
         res.json(results);
       }else {
         next();
       }
-    })
-    .then(() => {
-      return mongoose.disconnect();
     })
     .catch(err => next(err)); 
 });
 
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/', (req, res, next) => {
-  const { title, content } = req.body;
-  const newItem = { title, content };
-
-  if (!newItem.title) {
+  const { title, content, folderId } = req.body;
+  
+  if (!title) {
     const err = new Error('Missing `title` in request body');
     err.status = 400;
     return next(err);
   }
 
-  mongoose.connect(MONGODB_URI)
-    .then(() => {
-      return Note
-        .create(newItem);
-    })
+  if (folderId && !mongoose.Types.ObjectId.isValid(folderId)) {
+    const err = new Error('The `folderId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
+  const newNote = { title, content, folderId };
+
+  Note.create(newNote)
     .then(results => {
-      if(results) {
-        res.json(results);
-      }else {
-        next();
-      }
-    })
-    .then(() => {
-      return mongoose.disconnect();
+      res.location(`${req.originalUrl}/${results.id}`).status(201).json(results);
     })
     .catch(err => next(err)); 
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
-  const id = req.params.id;
+  const { id } = req.params;
+  const { title, content, folderId } = req.body;
 
-  const updateObj = {};
-  const updateableFields = ['title', 'content'];
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
+    return next(err);
+  }
 
-  updateableFields.forEach(field => {
-    if (field in req.body) {
-      updateObj[field] = req.body[field];
-    }
-  });
+  if (!title) {
+    const err = new Error('Missing `title` in request body');
+    err.status = 400;
+    return next(err);
+  }
 
-  mongoose.connect(MONGODB_URI)
-    .then(() => {
-      return Note
-        .findByIdAndUpdate(id, updateObj, {new: true});
-    })
+  if (folderId && !mongoose.Types.ObjectId.isValid(folderId)) {
+    const err = new Error('The `folderId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
+  const updateNote = { title, content, folderId };
+
+  Note.findByIdAndUpdate(id, updateNote, {new: true})
+    
     .then(results => {
       if(results) {
         res.json(results);
       }else {
         next();
       }
-    })
-    .then(() => {
-      return mongoose.disconnect();
     })
     .catch(err => next(err)); 
 });
@@ -122,20 +116,13 @@ router.put('/:id', (req, res, next) => {
 router.delete('/:id', (req, res, next) => {
   const id = req.params.id;
   
-  mongoose.connect(MONGODB_URI)
-    .then(() => {
-      return Note
-        .findByIdAndRemove(id);
-    })
+  Note.findByIdAndRemove(id)
     .then(results => {
       if(results) {
         res.sendStatus(204);
       }else {
         next();
       }
-    })
-    .then(() => {
-      return mongoose.disconnect();
     })
     .catch(err => next(err)); 
 });
