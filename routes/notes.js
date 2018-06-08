@@ -6,6 +6,10 @@ const router = express.Router();
 const mongoose = require('mongoose');
 
 
+
+// TODO: 
+
+
 /* ========== GET/READ ALL ITEM ========== */
 router.get('/', (req, res, next) => {
   const { searchTerm, folderId, tags } = req.query;
@@ -18,7 +22,6 @@ router.get('/', (req, res, next) => {
   return Note
     .find(filter)
     .sort({ updatedAt: 'desc' })
-        
     .then(results => {
       if(results) {
         res.json(results);
