@@ -14,7 +14,7 @@ router.get('/', (req, res, next) => {
 
   if (searchTerm) {
     filter = {$or: [{title: { $regex: searchTerm }}, {content: { $regex: searchTerm }}]};
-  }
+  } 
   
   if(folderId) {
     filter.folderId = folderId;
