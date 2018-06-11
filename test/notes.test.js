@@ -114,30 +114,30 @@ describe ('Noteful API - Notes Integration Testing', function(){
         });
     });
 
-    // it.skip('should return correct search results for a tags query', () => {
-    //   let tag;
-    //   let tagList;
-    //   return Tag.findOne()
-    //     .then(_tag => {
-    //       tag = _tag;
-    //       return Note.find({ tags: tag.id });
-    //     })
-    //     .then(_tagList => {
-    //       // console.log(_tagList);
-    //       tagList = _tagList;
-    //       // console.log(tagList);
-    //       // console.log(tag.id);
-    //       return chai.request(app).get(`/api/notes?tags=${tag.id}`);
-    //     })
-    //     .then(res => {
-    //       // console.log(res.body);
-    //       // console.log(tagList.length);
-    //       expect(res).to.have.status(200);
-    //       expect(res).to.be.json;
-    //       expect(res.body).to.be.a('array');
-    //       expect(res.body).to.have.length(tagList.length);
-    //     });
-    // });
+    it('should return correct search results for a tags query', () => {
+      let tag;
+      let tagList;
+      return Tag.findOne()
+        .then(_tag => {
+          tag = _tag;
+          return Note.find({ tags: tag.id });
+        })
+        .then(_tagList => {
+          // console.log(_tagList);
+          tagList = _tagList;
+          // console.log(tagList);
+          // console.log(tag.id);
+          return chai.request(app).get(`/api/notes?tagId=${tag.id}`);
+        })
+        .then(res => {
+          console.log(res.body);
+          console.log(tagList);
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(tagList.length);
+        });
+    });
 
     it('should return an empty array for an incorrect query', () => {
       const searchTerm = 'NotValid';
